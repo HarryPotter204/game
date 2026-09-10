@@ -119,12 +119,40 @@ export default function App() {
     setControlMode((prev) => (prev === 'follow' ? 'keys_buttons' : 'follow'));
   };
 
+  // Smartphone portrait mode detection
+  const [isPortrait, setIsPortrait] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerHeight > window.innerWidth && window.innerWidth < 1024;
+  });
+
+  useEffect(() => {
+    const checkOrientation = () => {
+      const portrait = window.innerHeight > window.innerWidth && window.innerWidth < 1024;
+      setIsPortrait(portrait);
+    };
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  }, []);
+
   return (
-    <main className="min-h-screen bg-[#07090e] text-slate-100 flex flex-col items-center justify-center p-1 sm:p-3 md:p-4 overflow-hidden select-none">
-      {/* Container matching standard 16:9 gaming frame */}
-      <div className="w-full max-w-5xl flex flex-col items-center">
-        {/* Game Stage Box */}
-        <div className="relative w-full aspect-[16/9] max-h-[88vh] rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-slate-800 sm:border-2 sm:border-slate-800/90 bg-[#0b0d14]">
+    <main className={`min-h-screen bg-[#07090e] text-slate-100 flex flex-col items-center justify-center overflow-hidden select-none ${
+      isPortrait ? 'p-1' : 'p-1 sm:p-3 md:p-4'
+    }`}>
+      {/* Container adapting to orientation */}
+      <div className={`w-full flex flex-col items-center transition-all duration-300 ${
+        isPortrait ? 'max-w-md' : 'max-w-5xl'
+      }`}>
+        {/* Game Stage Box: Aspect 9:16 on smartphone portrait, 16:9 on landscape/desktop */}
+        <div className={`relative w-full rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-slate-800 sm:border-2 sm:border-slate-800/90 bg-[#0b0d14] transition-all duration-300 ${
+          isPortrait
+            ? 'aspect-[9/16] max-h-[94vh]'
+            : 'aspect-[16/9] max-h-[88vh]'
+        }`}>
           {/* Main 60fps Canvas Simulator */}
           <GameCanvas
             character={character}
@@ -142,6 +170,7 @@ export default function App() {
             controlMode={controlMode}
             isMobileTouchLeft={isMobileTouchLeft}
             isMobileTouchRight={isMobileTouchRight}
+            isPortrait={isPortrait}
           />
 
           {/* HUD Overlay (Only rendered during active gameplay or pause, never in start menu) */}
@@ -165,6 +194,7 @@ export default function App() {
               isMobileTouchRight={isMobileTouchRight}
               setIsMobileTouchLeft={setIsMobileTouchLeft}
               setIsMobileTouchRight={setIsMobileTouchRight}
+              isPortrait={isPortrait}
             />
           )}
 
@@ -206,23 +236,29 @@ export default function App() {
                 <span className="h-px w-6 sm:w-10 bg-gradient-to-l from-transparent to-amber-400/60" />
               </div>
 
-              {/* Main Title: ヴォルデモートの呪いをかわせ */}
-              <h1 className="text-2xl sm:text-4xl md:text-5xl font-black font-cinzel tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-yellow-200 to-amber-400 drop-shadow-[0_2px_20px_rgba(245,158,11,0.4)] mb-3">
+              {/* Main Title: ヴォルデモートの呪いをかわせ (Guaranteed strictly 1-line display) */}
+              <h1 className="text-[clamp(1.12rem,5.2vw,2.75rem)] font-black font-cinzel tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-yellow-200 to-amber-400 drop-shadow-[0_2px_20px_rgba(245,158,11,0.4)] mb-2 sm:mb-3 whitespace-nowrap leading-tight text-center max-w-full">
                 ヴォルデモートの呪いをかわせ
               </h1>
 
-              {/* Description Paragraph (Broken line before 黄金の～) */}
-              <p className="text-xs sm:text-sm text-slate-300/90 max-w-md mb-5 leading-relaxed tracking-wide font-normal">
-                大広間に降り注ぐ緑の即死呪文「アバダ・ケダブラ」を回避し、<br />
-                黄金のガリオン金貨を集めよう！
-              </p>
+              {/* Description Paragraph: fluid typography auto-scaling to container width without awkward wraps */}
+              <div className="w-full max-w-md sm:max-w-lg mb-4 sm:mb-5 px-1 sm:px-2 text-center">
+                <p className="text-[clamp(0.58rem,2.8vw,0.85rem)] text-slate-300/90 leading-relaxed tracking-wider font-normal whitespace-nowrap">
+                  大広間に降り注ぐ緑の即死呪文「アバダ・ケダブラ」を回避し、
+                </p>
+                <p className="text-[clamp(0.64rem,3.1vw,0.875rem)] text-amber-200/95 font-medium leading-relaxed tracking-wider whitespace-nowrap mt-0.5">
+                  黄金のガリオン金貨を集めよう！
+                </p>
+              </div>
 
-              {/* Menu Actions: Start, Character, Rankings (Equal height buttons, stylish design) */}
-              <div className="flex flex-row items-center justify-center gap-2 sm:gap-2.5 w-full max-w-md mb-4">
+              {/* Menu Actions: Start, Character, Rankings (Auto-scaled equally to container width with full text visibility) */}
+              <div className={`flex flex-row items-center justify-between gap-1.5 sm:gap-3 w-full mb-4 ${
+                isPortrait ? 'max-w-md' : 'max-w-xl sm:max-w-2xl'
+              }`}>
                 <button
                   id="start-game-btn"
                   onClick={startGame}
-                  className="h-11 sm:h-12 flex-1 px-3 rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-400 hover:from-emerald-400 hover:to-green-300 active:scale-[0.98] text-slate-950 font-black text-xs sm:text-sm tracking-wider shadow-lg shadow-emerald-950/70 ring-1 ring-emerald-300/40 hover:ring-emerald-300/70 transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+                  className="h-11 sm:h-12 flex-1 min-w-0 px-2 sm:px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-400 hover:from-emerald-400 hover:to-green-300 active:scale-[0.98] text-slate-950 font-black text-[clamp(0.68rem,1.6vw,0.95rem)] tracking-wide shadow-lg shadow-emerald-950/70 ring-1 ring-emerald-300/40 hover:ring-emerald-300/70 transition-all flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer whitespace-nowrap"
                 >
                   <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current shrink-0" />
                   <span>ゲームスタート</span>
@@ -231,18 +267,18 @@ export default function App() {
                 <button
                   id="select-wizard-menu-btn"
                   onClick={() => setShowCharacterSelect(true)}
-                  className="h-11 sm:h-12 px-3 sm:px-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-amber-200 hover:text-white font-bold text-xs sm:text-sm border border-amber-500/30 hover:border-amber-400/60 shadow-md shadow-black/40 active:scale-[0.98] transition-all whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+                  className="h-11 sm:h-12 flex-1 min-w-0 px-2 sm:px-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-amber-200 hover:text-white font-bold text-[clamp(0.68rem,1.6vw,0.95rem)] border border-amber-500/30 hover:border-amber-400/60 shadow-md shadow-black/40 active:scale-[0.98] transition-all whitespace-nowrap cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
                   <span>{character.name}</span>
                 </button>
 
                 <button
                   id="menu-open-ranking-btn"
                   onClick={() => setShowMenuRanking(true)}
-                  className="h-11 sm:h-12 px-3 sm:px-4 rounded-xl bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 font-bold text-xs sm:text-sm border border-amber-500/35 hover:border-amber-400/60 shadow-md shadow-black/40 active:scale-[0.98] transition-all whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+                  className="h-11 sm:h-12 flex-1 min-w-0 px-2 sm:px-4 rounded-xl bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 font-bold text-[clamp(0.68rem,1.6vw,0.95rem)] border border-amber-500/35 hover:border-amber-400/60 shadow-md shadow-black/40 active:scale-[0.98] transition-all whitespace-nowrap cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5"
                 >
-                  <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
                   <span>ランキング</span>
                 </button>
               </div>
@@ -265,7 +301,7 @@ export default function App() {
                   📱 画面タップ・追従で移動
                 </span>
                 <span className="flex items-center gap-1 bg-slate-900/70 px-2.5 py-0.5 rounded-full border border-slate-800/80">
-                  ⌨️ A / D または ◀ ▶ キー
+                  🔄 縦・横どちらの画面でも楽しめます
                 </span>
               </div>
             </div>
@@ -295,6 +331,16 @@ export default function App() {
                 >
                   最初からやり直す
                 </button>
+                <button
+                  id="back-to-title-from-pause-btn"
+                  onClick={() => {
+                    sound.playClick();
+                    setGameStatus('menu');
+                  }}
+                  className="py-3 px-6 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white font-bold text-xs sm:text-sm border border-slate-700/80 transition-colors cursor-pointer"
+                >
+                  スタートに戻る
+                </button>
               </div>
             </div>
           )}
@@ -311,6 +357,7 @@ export default function App() {
               onRestart={startGame}
               onOpenCharacterSelect={() => setShowCharacterSelect(true)}
               onReturnToMenu={() => setGameStatus('menu')}
+              isPortrait={isPortrait}
             />
           )}
 

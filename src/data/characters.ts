@@ -3,7 +3,7 @@ import { Character } from '../types';
 export const CHARACTERS: Character[] = [
   {
     id: 'harry',
-    name: 'ハリー (HARRY)',
+    name: 'ハリー・ポッター',
     badge: 'シーカー',
     perkDescription: '驚異の反射神経！呪文を至近距離で避けると「かすり抜けボーナス（+250点）」を獲得',
     speed: 7.8,
@@ -16,7 +16,7 @@ export const CHARACTERS: Character[] = [
   },
   {
     id: 'hermione',
-    name: 'ハーマイオニー (HERMIONE)',
+    name: 'ハーマイオニー・グレンジャー',
     badge: '首席監督生',
     perkDescription: '引き寄せ魔法！周囲のガリオン金貨やアイテムを自動で手元に吸い寄せる',
     speed: 7.3,
@@ -29,7 +29,7 @@ export const CHARACTERS: Character[] = [
   },
   {
     id: 'ron',
-    name: 'ロン (RON)',
+    name: 'ロン・ウィーズリー',
     badge: 'キーパー',
     perkDescription: '不屈の勇敢な心！最初からライフが4つ（通常より+1多い）で耐久力アップ',
     speed: 7.4,

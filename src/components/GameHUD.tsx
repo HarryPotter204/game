@@ -22,6 +22,7 @@ interface GameHUDProps {
   isMobileTouchRight: boolean;
   setIsMobileTouchLeft: (v: boolean) => void;
   setIsMobileTouchRight: (v: boolean) => void;
+  isPortrait?: boolean;
 }
 
 export const GameHUD: React.FC<GameHUDProps> = ({
@@ -43,6 +44,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
   isMobileTouchRight,
   setIsMobileTouchLeft,
   setIsMobileTouchRight,
+  isPortrait = false,
 }) => {
   const [isMuted, setIsMuted] = React.useState(sound.isMuted);
 
@@ -153,7 +155,9 @@ export const GameHUD: React.FC<GameHUDProps> = ({
 
       {/* --- ON-SCREEN MOBILE / TABLET TOUCH BUTTONS (Floating at mid-lower sides, NOT on the floor) --- */}
       {isPlaying && (
-        <div className="absolute inset-x-0 bottom-8 sm:bottom-12 flex justify-between items-center px-3 sm:px-6 pointer-events-none z-10">
+        <div className={`absolute inset-x-0 flex justify-between items-center px-3 sm:px-6 pointer-events-none z-10 ${
+          isPortrait ? 'bottom-16 sm:bottom-20' : 'bottom-8 sm:bottom-12'
+        }`}>
           <button
             id="mobile-touch-left-btn"
             onPointerDown={(e) => {

@@ -11,54 +11,14 @@ import { RankingEntry, RankingTab } from '../types';
 
 const RANKINGS_COLLECTION = 'rankings';
 
-// Default Hogwarts Hall of Fame entries if collection is fresh
-const INITIAL_SEED_RANKINGS: RankingEntry[] = [
-  {
-    playerName: 'アルバス・D',
-    characterId: 'dumbledore',
-    characterName: 'ダンブルドア',
-    score: 88400,
-    galleons: 12500,
-    level: 12,
-    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-  },
-  {
-    playerName: '不死鳥の騎士',
-    characterId: 'harry',
-    characterName: 'ハリー',
-    score: 64200,
-    galleons: 8900,
-    level: 10,
-    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-  },
-  {
-    playerName: '万能の魔女',
-    characterId: 'hermione',
-    characterName: 'ハーマイオニー',
-    score: 52100,
-    galleons: 9800,
-    level: 9,
-    createdAt: new Date(Date.now() - 86400000 * 1.5).toISOString(),
-  },
-  {
-    playerName: '魔法薬の達人',
-    characterId: 'snape',
-    characterName: 'スネイプ',
-    score: 41300,
-    galleons: 6400,
-    level: 8,
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    playerName: 'いたずら仕掛け人',
-    characterId: 'ron',
-    characterName: 'ロン',
-    score: 28900,
-    galleons: 7100,
-    level: 6,
-    createdAt: new Date().toISOString(),
-  },
-];
+// Bot names to exclude from ranking to ensure only real player entries are displayed
+const BOT_NAMES = new Set([
+  'アルバス・D',
+  '不死鳥の騎士',
+  '万能の魔女',
+  '魔法薬の達人',
+  'いたずら仕掛け人',
+]);
 
 /**
  * Submits a new score to Firestore rankings
@@ -96,7 +56,7 @@ export async function submitRanking(
 }
 
 /**
- * Fetches rankings ordered by score or galleons
+ * Fetches rankings ordered by score or galleons (real player submissions only)
  */
 export async function fetchRankings(
   type: RankingTab = 'score',
@@ -107,7 +67,7 @@ export async function fetchRankings(
     const q = query(
       collection(db, RANKINGS_COLLECTION),
       orderBy(field, 'desc'),
-      limit(limitCount)
+      limit(limitCount + 5) // Fetch a few extra to account for any filtered bot names
     );
 
     const snapshot = await getDocs(q);
@@ -115,28 +75,27 @@ export async function fetchRankings(
       const results: RankingEntry[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
+        const pName = data.playerName || '名無しの魔法使い';
+        // Filter out any legacy bot entries
+        if (BOT_NAMES.has(pName)) return;
+
         results.push({
           id: doc.id,
-          playerName: data.playerName || '名無しの魔法使い',
+          playerName: pName,
           characterId: data.characterId || 'harry',
-          characterName: data.characterName || 'ハリー',
+          characterName: data.characterName || 'ハリー・ポッター',
           score: typeof data.score === 'number' ? data.score : 0,
           galleons: typeof data.galleons === 'number' ? data.galleons : 0,
           level: typeof data.level === 'number' ? data.level : 1,
           createdAt: data.createdAt || new Date().toISOString(),
         });
       });
-      return results;
+      return results.slice(0, limitCount);
     }
 
-    // If collection is empty, sort initial seeds as initial fallback
-    return [...INITIAL_SEED_RANKINGS].sort((a, b) => {
-      return type === 'score' ? b.score - a.score : b.galleons - a.galleons;
-    });
+    return [];
   } catch (error) {
-    console.warn('Firestore fetch failed, using fallback rankings:', error);
-    return [...INITIAL_SEED_RANKINGS].sort((a, b) => {
-      return type === 'score' ? b.score - a.score : b.galleons - a.galleons;
-    });
+    console.warn('Firestore fetch failed or empty:', error);
+    return [];
   }
 }

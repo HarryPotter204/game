@@ -18,11 +18,14 @@ interface GameCanvasProps {
   controlMode: 'follow' | 'keys_buttons' | 'split_touch';
   isMobileTouchLeft: boolean;
   isMobileTouchRight: boolean;
+  isPortrait?: boolean;
 }
 
-const CANVAS_WIDTH = 1280;
-const CANVAS_HEIGHT = 720;
-const FLOOR_Y = 620;
+export const getCanvasDimensions = (isPortrait: boolean) => ({
+  width: isPortrait ? 720 : 1280,
+  height: isPortrait ? 1280 : 720,
+  floorY: isPortrait ? 1140 : 620,
+});
 
 export const GameCanvas: React.FC<GameCanvasProps> = ({
   character,
@@ -40,15 +43,16 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
   controlMode,
   isMobileTouchLeft,
   isMobileTouchRight,
+  isPortrait = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Mutable Game Loop State
   const stateRef = useRef({
     player: {
-      x: CANVAS_WIDTH / 2,
-      y: FLOOR_Y,
-      targetX: CANVAS_WIDTH / 2,
+      x: isPortrait ? 360 : 640,
+      y: isPortrait ? 1140 : 620,
+      targetX: isPortrait ? 360 : 640,
       vx: 0,
       width: 48,
       height: 64,
@@ -73,7 +77,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       right: false,
     },
     mousePos: {
-      x: CANVAS_WIDTH / 2,
+      x: isPortrait ? 360 : 640,
       active: false,
     },
     screenShake: 0,
@@ -94,6 +98,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     controlMode,
     isMobileTouchLeft,
     isMobileTouchRight,
+    isPortrait,
     onScoreChange,
     onGemsChange,
     onLivesChange,
@@ -113,6 +118,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       controlMode,
       isMobileTouchLeft,
       isMobileTouchRight,
+      isPortrait,
       onScoreChange,
       onGemsChange,
       onLivesChange,
@@ -130,6 +136,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     controlMode,
     isMobileTouchLeft,
     isMobileTouchRight,
+    isPortrait,
     onScoreChange,
     onGemsChange,
     onLivesChange,
@@ -137,22 +144,46 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     onGameOver,
   ]);
 
-  // Initialize atmospheric torches and duelists
+  // Handle portrait/landscape orientation switch dynamically
   useEffect(() => {
-    const torches: Torch[] = [
-      { x: 120, y: 360, intensity: 1, flickerSpeed: 0.12, flickerOffset: 0 },
-      { x: 250, y: 390, intensity: 0.9, flickerSpeed: 0.15, flickerOffset: 1.5 },
-      { x: 1030, y: 390, intensity: 0.9, flickerSpeed: 0.14, flickerOffset: 2.7 },
-      { x: 1160, y: 360, intensity: 1, flickerSpeed: 0.13, flickerOffset: 4.2 },
-    ];
+    const isP = Boolean(isPortrait);
+    const { width, floorY } = getCanvasDimensions(isP);
+    const player = stateRef.current.player;
+    player.y = floorY;
+    if (player.x > width - 40) {
+      player.x = width / 2;
+    }
+    player.targetX = player.x;
 
-    const duelists: Duelist[] = [
-      { x: 380, y: 460, direction: 'right', wandCastTimer: 80, wandSparkTimer: 0, sparkColor: '#f43f5e' },
-      { x: 900, y: 460, direction: 'left', wandCastTimer: 120, wandSparkTimer: 0, sparkColor: '#38bdf8' },
-    ];
+    if (isP) {
+      stateRef.current.torches = [
+        { x: 60, y: 520, intensity: 1, flickerSpeed: 0.12, flickerOffset: 0 },
+        { x: 60, y: 840, intensity: 0.95, flickerSpeed: 0.14, flickerOffset: 1.5 },
+        { x: 660, y: 520, intensity: 1, flickerSpeed: 0.13, flickerOffset: 2.7 },
+        { x: 660, y: 840, intensity: 0.95, flickerSpeed: 0.15, flickerOffset: 4.2 },
+      ];
+      stateRef.current.duelists = [
+        { x: 80, y: 960, direction: 'right', wandCastTimer: 80, wandSparkTimer: 0, sparkColor: '#f43f5e' },
+        { x: 640, y: 960, direction: 'left', wandCastTimer: 120, wandSparkTimer: 0, sparkColor: '#38bdf8' },
+      ];
+    } else {
+      stateRef.current.torches = [
+        { x: 120, y: 360, intensity: 1, flickerSpeed: 0.12, flickerOffset: 0 },
+        { x: 250, y: 390, intensity: 0.9, flickerSpeed: 0.15, flickerOffset: 1.5 },
+        { x: 1030, y: 390, intensity: 0.9, flickerSpeed: 0.14, flickerOffset: 2.7 },
+        { x: 1160, y: 360, intensity: 1, flickerSpeed: 0.13, flickerOffset: 4.2 },
+      ];
+      stateRef.current.duelists = [
+        { x: 380, y: 460, direction: 'right', wandCastTimer: 80, wandSparkTimer: 0, sparkColor: '#f43f5e' },
+        { x: 900, y: 460, direction: 'left', wandCastTimer: 120, wandSparkTimer: 0, sparkColor: '#38bdf8' },
+      ];
+    }
+  }, [isPortrait]);
 
-    stateRef.current.torches = torches;
-    stateRef.current.duelists = duelists;
+  // Initialize atmospheric magic motes
+  useEffect(() => {
+    const isP = Boolean(isPortrait);
+    const { width, floorY } = getCanvasDimensions(isP);
 
     // Atmospheric Magic Motes floating through the Gothic Great Hall
     const motes: MagicMote[] = [];
@@ -166,8 +197,8 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     for (let i = 0; i < 65; i++) {
       const col = colors[Math.floor(Math.random() * colors.length)];
       motes.push({
-        x: Math.random() * CANVAS_WIDTH,
-        y: Math.random() * (FLOOR_Y + 15),
+        x: Math.random() * width,
+        y: Math.random() * (floorY + 15),
         vx: (Math.random() - 0.5) * 0.35,
         vy: -(Math.random() * 0.45 + 0.15),
         size: Math.random() * 2.2 + 1.1,
@@ -182,7 +213,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       });
     }
     stateRef.current.magicMotes = motes;
-  }, []);
+  }, [isPortrait]);
 
   // Keyboard handlers
   useEffect(() => {
@@ -214,10 +245,12 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
 
   // Pointer move / Touch follow
   const getCanvasCoords = useCallback((clientX: number, clientY: number) => {
-    if (!canvasRef.current) return { x: CANVAS_WIDTH / 2, y: FLOOR_Y };
+    const isP = Boolean(propsRef.current.isPortrait);
+    const { width, height, floorY } = getCanvasDimensions(isP);
+    if (!canvasRef.current) return { x: width / 2, y: floorY };
     const rect = canvasRef.current.getBoundingClientRect();
-    const scaleX = CANVAS_WIDTH / rect.width;
-    const scaleY = CANVAS_HEIGHT / rect.height;
+    const scaleX = width / rect.width;
+    const scaleY = height / rect.height;
     return {
       x: (clientX - rect.left) * scaleX,
       y: (clientY - rect.top) * scaleY,
@@ -259,26 +292,26 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
   useEffect(() => {
     let animId: number;
 
-    const spawnSpell = (currentScore: number, currentLevel: number) => {
+    const spawnSpell = (currentScore: number, currentLevel: number, curW: number, curH: number, isP: boolean) => {
       const state = stateRef.current;
       // Gentle difficulty scaling: Spawns gradually increase without sudden unfair bullet hell spikes
       const baseInterval = Math.max(14, 46 - currentLevel * 2 - Math.floor(currentScore / 5000));
       if (state.frameCount % baseInterval === 0) {
         const id = state.nextSpellId++;
-        const targetX = Math.random() * (CANVAS_WIDTH - 80) + 40;
+        const targetX = Math.random() * (curW - 80) + 40;
         // Mild angle variance
-        const angleSpread = (Math.random() - 0.5) * 0.35;
+        const angleSpread = (Math.random() - 0.5) * (isP ? 0.28 : 0.35);
         // Smoother, more reaction-friendly speed scaling
-        const speed = Math.random() * 2.0 + 3.8 + currentLevel * 0.28;
+        const speed = Math.random() * 2.0 + (isP ? 4.6 : 3.8) + currentLevel * (isP ? 0.32 : 0.28);
 
         state.spells.push({
           id,
-          x: targetX + (Math.random() - 0.5) * 160,
+          x: targetX + (Math.random() - 0.5) * (isP ? 100 : 160),
           y: -40,
           vx: Math.sin(angleSpread) * speed * 0.75,
           vy: Math.cos(angleSpread) * speed + 2.2,
           radius: Math.random() * 5 + 10,
-          length: Math.random() * 25 + 35,
+          length: Math.random() * 25 + (isP ? 45 : 35),
           angle: angleSpread,
           speed,
           trail: [],
@@ -293,7 +326,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       }
     };
 
-    const spawnGem = (currentLevel: number) => {
+    const spawnGem = (currentLevel: number, curW: number, isP: boolean) => {
       const state = stateRef.current;
       // Gems/Galleons spawn every ~145 frames (~2.4 seconds) for smoother flow
       if (state.frameCount % 145 === 0) {
@@ -304,9 +337,9 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
 
         state.gems.push({
           id,
-          x: Math.random() * (CANVAS_WIDTH - 160) + 80,
+          x: Math.random() * (curW - 120) + 60,
           y: -20,
-          vy: Math.random() * 1.1 + 1.8, // gentle floating descent
+          vy: Math.random() * 1.1 + (isP ? 2.2 : 1.8), // gentle floating descent
           size: isStar ? 24 : 19,
           type: isShield ? 'shield' : isRuby ? 'ruby' : isStar ? 'star' : 'galleon',
           value: isShield ? 0 : isRuby ? 50 : isStar ? 100 : 10,
@@ -356,6 +389,8 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
 
       const state = stateRef.current;
       const props = propsRef.current;
+      const isP = Boolean(props.isPortrait);
+      const { width: curW, height: curH, floorY: curFloor } = getCanvasDimensions(isP);
 
       // Always update ambient magic motes so the gothic hall sparkles continuously
       const motesSpeed = (props.isPlaying && !props.isPaused) ? 1 : 0.6;
@@ -369,11 +404,11 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
 
         // Wrap around edges to maintain rich atmospheric density
         if (mote.y < -20) {
-          mote.y = FLOOR_Y + 10;
-          mote.x = Math.random() * CANVAS_WIDTH;
+          mote.y = curFloor + 10;
+          mote.x = Math.random() * curW;
         }
-        if (mote.x < -20) mote.x = CANVAS_WIDTH + 20;
-        if (mote.x > CANVAS_WIDTH + 20) mote.x = -20;
+        if (mote.x < -20) mote.x = curW + 20;
+        if (mote.x > curW + 20) mote.x = -20;
       });
 
       // 1. UPDATE STATE (If Playing & Not Paused)
@@ -390,13 +425,14 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
           if (expectedLevel > props.level) {
             props.onLevelChange(expectedLevel);
             sound.playLevelUp();
-            addFloatingText(`⚡ レベル ${expectedLevel} ⚡`, CANVAS_WIDTH / 2, 280, '#facc15', 36);
+            addFloatingText(`⚡ レベル ${expectedLevel} ⚡`, curW / 2, isP ? 380 : 280, '#facc15', 36);
           }
         }
 
         // --- PLAYER MOVEMENT LOGIC (Simple & Intuitive) ---
         const player = state.player;
         const charSpeed = props.character.speed;
+        player.y = curFloor;
 
         let moveDir = 0;
 
@@ -425,12 +461,12 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
 
         // Boundaries
         const halfW = player.width / 2;
-        if (player.x < halfW + 20) {
-          player.x = halfW + 20;
+        if (player.x < halfW + 16) {
+          player.x = halfW + 16;
           player.vx = 0;
         }
-        if (player.x > CANVAS_WIDTH - halfW - 20) {
-          player.x = CANVAS_WIDTH - halfW - 20;
+        if (player.x > curW - halfW - 16) {
+          player.x = curW - halfW - 16;
           player.vx = 0;
         }
 
@@ -473,8 +509,8 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         }
 
         // Spawners
-        spawnSpell(props.score, props.level);
-        spawnGem(props.level);
+        spawnSpell(props.score, props.level, curW, curH, isP);
+        spawnGem(props.level, curW, isP);
 
         // Update Spells
         for (let i = state.spells.length - 1; i >= 0; i--) {
@@ -488,8 +524,8 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
           s.y += s.vy;
 
           // Floor collision / splash
-          if (s.y >= FLOOR_Y + 10) {
-            addExplosion(s.x, FLOOR_Y + 15, '#22c55e', 9);
+          if (s.y >= curFloor + 10) {
+            addExplosion(s.x, curFloor + 15, '#22c55e', 9);
             state.spells.splice(i, 1);
             continue;
           }
@@ -577,7 +613,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
           }
 
           // Out of screen
-          if (g.y > CANVAS_HEIGHT + 30) {
+          if (g.y > curH + 40) {
             state.gems.splice(i, 1);
           }
         }
@@ -658,37 +694,37 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
 
       // Background base (dark midnight stone castle hall)
       ctx.fillStyle = '#080a12';
-      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      ctx.fillRect(0, 0, curW, curH);
 
       // Central Gothic Arch & Stained Glass Window glow
       const windowGrad = ctx.createRadialGradient(
-        CANVAS_WIDTH / 2,
-        260,
+        curW / 2,
+        isP ? 340 : 260,
         20,
-        CANVAS_WIDTH / 2,
-        260,
-        360
+        curW / 2,
+        isP ? 340 : 260,
+        isP ? 380 : 360
       );
       windowGrad.addColorStop(0, 'rgba(40, 70, 120, 0.45)');
       windowGrad.addColorStop(0.5, 'rgba(20, 35, 75, 0.3)');
       windowGrad.addColorStop(1, 'rgba(8, 10, 18, 0)');
       ctx.fillStyle = windowGrad;
-      ctx.fillRect(CANVAS_WIDTH / 2 - 380, 40, 760, 500);
+      ctx.fillRect(curW / 2 - (isP ? 260 : 380), 40, isP ? 520 : 760, isP ? 700 : 500);
 
       // Draw Gothic Window frame in background
       ctx.save();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
       ctx.lineWidth = 3;
       // Tall central gothic lancet window
-      const winX = CANVAS_WIDTH / 2;
-      const winW = 140;
-      const winTop = 110;
-      const winBottom = 430;
+      const winX = curW / 2;
+      const winW = isP ? 130 : 140;
+      const winTop = isP ? 120 : 110;
+      const winBottom = isP ? 650 : 430;
       ctx.beginPath();
       ctx.moveTo(winX - winW / 2, winBottom);
-      ctx.lineTo(winX - winW / 2, winTop + 70);
+      ctx.lineTo(winX - winW / 2, winTop + (isP ? 90 : 70));
       ctx.quadraticCurveTo(winX - winW / 4, winTop - 20, winX, winTop);
-      ctx.quadraticCurveTo(winX + winW / 4, winTop - 20, winX + winW / 2, winTop + 70);
+      ctx.quadraticCurveTo(winX + winW / 4, winTop - 20, winX + winW / 2, winTop + (isP ? 90 : 70));
       ctx.lineTo(winX + winW / 2, winBottom);
       ctx.stroke();
 
@@ -696,7 +732,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       ctx.beginPath();
       ctx.moveTo(winX, winTop);
       ctx.lineTo(winX, winBottom);
-      for (let wy = winTop + 50; wy < winBottom; wy += 45) {
+      for (let wy = winTop + 50; wy < winBottom; wy += isP ? 55 : 45) {
         ctx.moveTo(winX - winW / 2 + 5, wy);
         ctx.lineTo(winX + winW / 2 - 5, wy);
       }
@@ -705,67 +741,114 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
 
       // Stone Wall Pillars & Gothic Arches on sides
       ctx.fillStyle = '#0c0f1d';
-      // Left pillar block
-      ctx.fillRect(0, 0, 160, FLOOR_Y + 40);
-      ctx.fillRect(200, 0, 90, FLOOR_Y + 40);
-      // Right pillar block
-      ctx.fillRect(CANVAS_WIDTH - 160, 0, 160, FLOOR_Y + 40);
-      ctx.fillRect(CANVAS_WIDTH - 290, 0, 90, FLOOR_Y + 40);
+      if (isP) {
+        // Portrait Pillars
+        ctx.fillRect(0, 0, 80, curFloor + 40);
+        ctx.fillRect(curW - 80, 0, 80, curFloor + 40);
 
-      // Arch mouldings
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      // Left arch
-      ctx.moveTo(160, 360);
-      ctx.quadraticCurveTo(200, 120, 290, 100);
-      // Right arch
-      ctx.moveTo(CANVAS_WIDTH - 160, 360);
-      ctx.quadraticCurveTo(CANVAS_WIDTH - 200, 120, CANVAS_WIDTH - 290, 100);
-      ctx.stroke();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(80, 520);
+        ctx.quadraticCurveTo(140, 240, 220, 200);
+        ctx.moveTo(curW - 80, 520);
+        ctx.quadraticCurveTo(curW - 140, 240, curW - 220, 200);
+        ctx.stroke();
 
-      // Hanging Banners (Gryffindor lion left, Slytherin serpent right - just like photo)
-      // Left banner (Crimson & Gold)
-      ctx.save();
-      ctx.fillStyle = '#6b131e';
-      ctx.beginPath();
-      ctx.moveTo(180, 130);
-      ctx.lineTo(250, 130);
-      ctx.lineTo(250, 350);
-      ctx.lineTo(215, 380);
-      ctx.lineTo(180, 350);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = '#d97706';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      // Gold emblem on banner
-      ctx.fillStyle = '#eab308';
-      ctx.beginPath();
-      ctx.arc(215, 230, 14, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+        // Portrait Banners
+        ctx.save();
+        ctx.fillStyle = '#6b131e';
+        ctx.beginPath();
+        ctx.moveTo(90, 160);
+        ctx.lineTo(150, 160);
+        ctx.lineTo(150, 360);
+        ctx.lineTo(120, 390);
+        ctx.lineTo(90, 360);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#eab308';
+        ctx.beginPath();
+        ctx.arc(120, 260, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
 
-      // Right banner (Emerald & Silver)
-      ctx.save();
-      ctx.fillStyle = '#0f442d';
-      ctx.beginPath();
-      ctx.moveTo(CANVAS_WIDTH - 250, 130);
-      ctx.lineTo(CANVAS_WIDTH - 180, 130);
-      ctx.lineTo(CANVAS_WIDTH - 180, 350);
-      ctx.lineTo(CANVAS_WIDTH - 215, 380);
-      ctx.lineTo(CANVAS_WIDTH - 250, 350);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = '#94a3b8';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      // Silver emblem
-      ctx.fillStyle = '#cbd5e1';
-      ctx.beginPath();
-      ctx.arc(CANVAS_WIDTH - 215, 230, 14, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+        ctx.save();
+        ctx.fillStyle = '#0f442d';
+        ctx.beginPath();
+        ctx.moveTo(curW - 150, 160);
+        ctx.lineTo(curW - 90, 160);
+        ctx.lineTo(curW - 90, 360);
+        ctx.lineTo(curW - 120, 390);
+        ctx.lineTo(curW - 150, 360);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#cbd5e1';
+        ctx.beginPath();
+        ctx.arc(curW - 120, 260, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      } else {
+        // Landscape Pillars & arches
+        ctx.fillRect(0, 0, 160, curFloor + 40);
+        ctx.fillRect(200, 0, 90, curFloor + 40);
+        ctx.fillRect(curW - 160, 0, 160, curFloor + 40);
+        ctx.fillRect(curW - 290, 0, 90, curFloor + 40);
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(160, 360);
+        ctx.quadraticCurveTo(200, 120, 290, 100);
+        ctx.moveTo(curW - 160, 360);
+        ctx.quadraticCurveTo(curW - 200, 120, curW - 290, 100);
+        ctx.stroke();
+
+        // Left banner (Crimson & Gold)
+        ctx.save();
+        ctx.fillStyle = '#6b131e';
+        ctx.beginPath();
+        ctx.moveTo(180, 130);
+        ctx.lineTo(250, 130);
+        ctx.lineTo(250, 350);
+        ctx.lineTo(215, 380);
+        ctx.lineTo(180, 350);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#eab308';
+        ctx.beginPath();
+        ctx.arc(215, 230, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Right banner (Emerald & Silver)
+        ctx.save();
+        ctx.fillStyle = '#0f442d';
+        ctx.beginPath();
+        ctx.moveTo(curW - 250, 130);
+        ctx.lineTo(curW - 180, 130);
+        ctx.lineTo(curW - 180, 350);
+        ctx.lineTo(curW - 215, 380);
+        ctx.lineTo(curW - 250, 350);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#cbd5e1';
+        ctx.beginPath();
+        ctx.arc(curW - 215, 230, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
 
       // Torches on Walls (Warm glowing light)
       state.torches.forEach((t) => {
@@ -888,43 +971,43 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       ctx.restore();
 
       // Ambient low-lying mist/fog on floor
-      const mistGrad = ctx.createLinearGradient(0, FLOOR_Y - 50, 0, FLOOR_Y + 50);
+      const mistGrad = ctx.createLinearGradient(0, curFloor - 50, 0, curFloor + 50);
       mistGrad.addColorStop(0, 'rgba(30, 41, 59, 0)');
       mistGrad.addColorStop(0.6, 'rgba(51, 65, 85, 0.18)');
       mistGrad.addColorStop(1, 'rgba(15, 23, 42, 0.3)');
       ctx.fillStyle = mistGrad;
-      ctx.fillRect(0, FLOOR_Y - 50, CANVAS_WIDTH, 100);
+      ctx.fillRect(0, curFloor - 50, curW, 100);
 
       // Stone Flagstone Floor
       ctx.fillStyle = '#111422';
-      ctx.fillRect(0, FLOOR_Y + 15, CANVAS_WIDTH, CANVAS_HEIGHT - FLOOR_Y - 15);
+      ctx.fillRect(0, curFloor + 15, curW, curH - curFloor - 15);
 
       // Floor stone tile grid lines
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
       ctx.lineWidth = 2;
-      for (let fy = FLOOR_Y + 15; fy < CANVAS_HEIGHT; fy += 28) {
+      for (let fy = curFloor + 15; fy < curH; fy += 28) {
         ctx.beginPath();
         ctx.moveTo(0, fy);
-        ctx.lineTo(CANVAS_WIDTH, fy);
+        ctx.lineTo(curW, fy);
         ctx.stroke();
       }
-      for (let fx = 0; fx < CANVAS_WIDTH; fx += 70) {
+      for (let fx = 0; fx < curW; fx += 70) {
         ctx.beginPath();
-        ctx.moveTo(fx, FLOOR_Y + 15);
-        ctx.lineTo(fx, CANVAS_HEIGHT);
+        ctx.moveTo(fx, curFloor + 15);
+        ctx.lineTo(fx, curH);
         ctx.stroke();
       }
 
       // Dynamic floor green light reflection under falling curses
       state.spells.forEach((s) => {
         if (s.y > 200) {
-          const proximity = Math.max(0, (s.y - 200) / (FLOOR_Y - 200));
-          const reflGrad = ctx.createRadialGradient(s.x, FLOOR_Y + 20, 4, s.x, FLOOR_Y + 20, 60 * proximity);
+          const proximity = Math.max(0, (s.y - 200) / (curFloor - 200));
+          const reflGrad = ctx.createRadialGradient(s.x, curFloor + 20, 4, s.x, curFloor + 20, 60 * proximity);
           reflGrad.addColorStop(0, `rgba(74, 222, 128, ${0.4 * proximity})`);
           reflGrad.addColorStop(1, 'rgba(74, 222, 128, 0)');
           ctx.fillStyle = reflGrad;
           ctx.beginPath();
-          ctx.ellipse(s.x, FLOOR_Y + 20, 50 * proximity, 12 * proximity, 0, 0, Math.PI * 2);
+          ctx.ellipse(s.x, curFloor + 20, 50 * proximity, 12 * proximity, 0, 0, Math.PI * 2);
           ctx.fill();
         }
       });
@@ -1330,7 +1413,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         ctx.lineWidth = 2;
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
-        ctx.ellipse(player.targetX, FLOOR_Y + 22, 18, 6, 0, 0, Math.PI * 2);
+        ctx.ellipse(player.targetX, curFloor + 22, 18, 6, 0, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
       }
@@ -1344,12 +1427,14 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     return () => cancelAnimationFrame(animId);
   }, []);
 
+  const { width: canvasWidth, height: canvasHeight } = getCanvasDimensions(Boolean(isPortrait));
+
   return (
     <div className="relative w-full h-full overflow-hidden select-none bg-[#0a0a0e]">
       <canvas
         ref={canvasRef}
-        width={CANVAS_WIDTH}
-        height={CANVAS_HEIGHT}
+        width={canvasWidth}
+        height={canvasHeight}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}

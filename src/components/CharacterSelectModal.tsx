@@ -15,8 +15,14 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
   onClose,
 }) => {
   return (
-    <div className="absolute inset-0 z-30 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in select-none">
-      <div className="w-[95%] max-w-4xl max-h-[92%] bg-[#0f121d] border border-slate-700/80 rounded-2xl p-4 sm:p-6 shadow-2xl relative flex flex-col justify-between overflow-hidden">
+    <div
+      onClick={onClose}
+      className="absolute inset-0 z-30 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in select-none"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-[95%] max-w-3xl max-h-[92%] bg-[#0f121d] border border-slate-700/80 rounded-2xl p-4 sm:p-6 shadow-2xl relative flex flex-col overflow-hidden"
+      >
         {/* Modal Header */}
         <div className="flex justify-between items-center mb-3 sm:mb-4 shrink-0">
           <div className="flex items-center gap-2">
@@ -36,7 +42,7 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
         </div>
 
         {/* 3 Character Cards horizontally aligned and spaced */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4 overflow-y-auto sm:overflow-visible">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 overflow-y-auto sm:overflow-visible">
           {CHARACTERS.map((char) => {
             const isSelected = selectedCharacter.id === char.id;
             return (
@@ -56,22 +62,28 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
                   </div>
                 )}
                 <div>
-                  <div className="flex items-center gap-3 mb-2.5">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2.5">
                     <div
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-black text-base sm:text-lg border-2 shrink-0 shadow-md"
+                      className="w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center font-black text-base sm:text-lg border-2 shrink-0 shadow-md"
                       style={{
                         backgroundColor: char.robeColor,
                         borderColor: char.accentColor,
                         color: '#ffffff',
                       }}
                     >
-                      {char.id === 'harry' ? 'H' : char.id === 'hermione' ? 'M' : 'R'}
+                      {char.id === 'harry' ? '⚡' : char.id === 'hermione' ? '✨' : '🦁'}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-black text-sm sm:text-base text-white truncate whitespace-nowrap">
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <h3
+                        className={`font-black text-white whitespace-nowrap leading-tight tracking-tight ${
+                          char.name.length > 10
+                            ? 'text-[clamp(0.68rem,1.35vw,0.875rem)]'
+                            : 'text-[clamp(0.78rem,1.75vw,1rem)]'
+                        }`}
+                      >
                         {char.name}
                       </h3>
-                      <span className="text-xs font-semibold text-amber-400 block truncate">
+                      <span className="text-[10px] sm:text-xs font-semibold text-amber-400 block mt-0.5">
                         {char.badge}
                       </span>
                     </div>
@@ -97,15 +109,6 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
             );
           })}
         </div>
-
-        {/* Confirmation Button */}
-        <button
-          id="confirm-wizard-btn"
-          onClick={onClose}
-          className="w-full py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-400 hover:from-emerald-400 hover:to-green-300 text-black font-black text-sm sm:text-base tracking-wide cursor-pointer transition-all shadow-lg shrink-0"
-        >
-          この魔法使いで遊ぶ ({selectedCharacter.name})
-        </button>
       </div>
     </div>
   );
