@@ -310,6 +310,7 @@ export default function App() {
               character={character}
               onRestart={startGame}
               onOpenCharacterSelect={() => setShowCharacterSelect(true)}
+              onReturnToMenu={() => setGameStatus('menu')}
             />
           )}
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { RotateCcw, Trophy, Coins, ShieldAlert, Send, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { RotateCcw, Trophy, Coins, ShieldAlert, Send, CheckCircle2, ArrowLeft, Home } from 'lucide-react';
 import { Character } from '../types';
 import { RankingBoard } from './RankingBoard';
 import { submitRanking } from '../services/rankingService';
@@ -13,6 +13,7 @@ interface GameOverModalProps {
   character: Character;
   onRestart: () => void;
   onOpenCharacterSelect: () => void;
+  onReturnToMenu: () => void;
 }
 
 export const GameOverModal: React.FC<GameOverModalProps> = ({
@@ -24,6 +25,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   character,
   onRestart,
   onOpenCharacterSelect,
+  onReturnToMenu,
 }) => {
   const [viewMode, setViewMode] = useState<'summary' | 'ranking'>('summary');
   const [playerName, setPlayerName] = useState(() => {
@@ -217,22 +219,31 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
         )}
 
         {/* Action Buttons: fully visible and never pushed out */}
-        <div className="flex gap-2 shrink-0">
+        <div className="flex gap-1.5 sm:gap-2 shrink-0">
           <button
             id="gameover-retry-btn"
             onClick={onRestart}
-            className="flex-1 h-9 sm:h-10 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 active:scale-[0.98] text-black font-black tracking-wide text-xs sm:text-sm shadow-lg shadow-emerald-900/40 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            className="flex-1 h-9 sm:h-10 px-2 sm:px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 active:scale-[0.98] text-black font-black tracking-wide text-[11px] sm:text-xs shadow-lg shadow-emerald-900/40 transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
           >
-            <RotateCcw className="w-3.5 h-3.5 stroke-[2.5]" />
+            <RotateCcw className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
             <span>もう一度挑戦</span>
           </button>
 
           <button
             id="gameover-change-wizard-btn"
             onClick={onOpenCharacterSelect}
-            className="h-9 sm:h-10 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 font-bold text-xs sm:text-sm border border-slate-700 transition-colors cursor-pointer whitespace-nowrap"
+            className="h-9 sm:h-10 px-2.5 sm:px-3 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 font-bold text-[11px] sm:text-xs border border-slate-700 transition-colors cursor-pointer whitespace-nowrap flex items-center justify-center gap-1"
           >
-            魔法使いを変更 ({character.name})
+            <span>魔法使いを変更</span>
+          </button>
+
+          <button
+            id="gameover-return-menu-btn"
+            onClick={onReturnToMenu}
+            className="h-9 sm:h-10 px-2.5 sm:px-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-amber-300 hover:text-amber-200 font-bold text-[11px] sm:text-xs border border-amber-500/30 hover:border-amber-400/50 transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-1 active:scale-[0.98]"
+          >
+            <Home className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>スタートに戻る</span>
           </button>
         </div>
       </div>
