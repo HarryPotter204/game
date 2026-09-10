@@ -1,0 +1,37 @@
+{
+  "entities": {
+    "Rankings": {
+      "description": "Leaderboard records for score and galleons",
+      "fields": {
+        "playerName": {
+          "type": "string",
+          "description": "Wizard's display name"
+        },
+        "characterId": {
+          "type": "string",
+          "description": "Wizard character ID"
+        },
+        "characterName": {
+          "type": "string",
+          "description": "Wizard character name"
+        },
+        "score": {
+          "type": "number",
+          "description": "Game final score"
+        },
+        "galleons": {
+          "type": "number",
+          "description": "Total galleons earned"
+        },
+        "level": {
+          "type": "number",
+          "description": "Level achieved"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of creation"
+        }
+      }
+    }
+  }
+}

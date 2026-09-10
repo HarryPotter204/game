@@ -1,0 +1,43 @@
+import { Character } from '../types';
+
+export const CHARACTERS: Character[] = [
+  {
+    id: 'harry',
+    name: 'ハリー (HARRY)',
+    badge: 'シーカー',
+    perkDescription: '驚異の反射神経！呪文を至近距離で避けると「かすり抜けボーナス（+250点）」を獲得',
+    speed: 7.8,
+    maxLives: 3,
+    perk: 'near_miss_bonus',
+    hairColor: '#171717',
+    robeColor: '#1a1c23',
+    accentColor: '#b91c1c',
+    hasGlasses: true,
+  },
+  {
+    id: 'hermione',
+    name: 'ハーマイオニー (HERMIONE)',
+    badge: '首席監督生',
+    perkDescription: '引き寄せ魔法！周囲のガリオン金貨やアイテムを自動で手元に吸い寄せる',
+    speed: 7.3,
+    maxLives: 3,
+    perk: 'shield_magnet',
+    hairColor: '#78350f',
+    robeColor: '#1a1c23',
+    accentColor: '#ca8a04',
+    hasGlasses: false,
+  },
+  {
+    id: 'ron',
+    name: 'ロン (RON)',
+    badge: 'キーパー',
+    perkDescription: '不屈の勇敢な心！最初からライフが4つ（通常より+1多い）で耐久力アップ',
+    speed: 7.4,
+    maxLives: 4,
+    perk: 'extra_life_luck',
+    hairColor: '#c2410c',
+    robeColor: '#1a1c23',
+    accentColor: '#b91c1c',
+    hasGlasses: false,
+  },
+];

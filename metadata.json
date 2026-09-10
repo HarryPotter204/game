@@ -1,0 +1,6 @@
+{
+  "name": "ヴォルデモートの呪いをかわせ！",
+  "description": "大広間に降り注ぐ緑の即死呪文「アバダ・ケダブラ」を回避し、黄金のガリオン金貨を集めるサバイバルアクションゲーム。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
