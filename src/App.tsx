@@ -247,7 +247,7 @@ export default function App() {
                   大広間に降り注ぐ緑の即死呪文「アバダ・ケダブラ」を回避し、
                 </p>
                 <p className="text-[clamp(0.64rem,3.1vw,0.875rem)] text-amber-200/95 font-medium leading-relaxed tracking-wider whitespace-nowrap mt-0.5">
-                  黄金のガリオン金貨を集めよう！
+                  キャラクターを選択↓黄金のガリオン金貨を集めよう！
                 </p>
               </div>
 
