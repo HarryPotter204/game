@@ -23,7 +23,7 @@ export const RankingBoard: React.FC<RankingBoardProps> = ({
   const loadData = useCallback(async (currentTab: RankingTab) => {
     setLoading(true);
     try {
-      const data = await fetchRankings(currentTab, compact ? 5 : 30);
+      const data = await fetchRankings(currentTab, compact ? 5 : 100);
       setRankings(data);
     } catch (e) {
       console.error('Failed to load rankings:', e);
